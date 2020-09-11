@@ -4,12 +4,15 @@ import java.net.Socket;
 import java.util.Vector;
 
 public class Server {
-  private int port = 8080;
+
+  private int port;
   private String host;
   private ServerSocket serverSocket;
   private Vector<Socket> users;
 
   public Server() {
+    this.host = "localhost";
+    this.port = 8080;
   }
 
   public Server(String host, int port) {
@@ -25,8 +28,7 @@ public class Server {
     while (true) {
       socket = serverSocket.accept();
       users.add(socket);
-      MyThread myThread = new MyThread(users, socket);
-      myThread.start();
+      new MyThread(users, socket).start();
     }
   }
 

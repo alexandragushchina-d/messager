@@ -4,6 +4,7 @@ import java.util.Scanner;
 import java.util.Vector;
 
 public class MyThread extends Thread {
+
   private Socket socket;
   private Vector<Socket> users;
   private String userName;
@@ -65,15 +66,15 @@ public class MyThread extends Thread {
     }
   }
 
-  private void checkLogin(String[] data) throws FileNotFoundException {
+  synchronized private void checkLogin(String[] data) throws FileNotFoundException {
     FileInputStream file =
       new FileInputStream("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd");
     Scanner sc = new Scanner(file);
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
       if (info[0].equals(data[0]) && info[1].equals(data[1])) {
-        userName = data[0];
-        isLogin = true;
+        this.userName = data[0];
+        this.isLogin = true;
         return;
       }
     }
