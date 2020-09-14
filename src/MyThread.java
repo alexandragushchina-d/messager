@@ -42,6 +42,7 @@ public class MyThread extends Thread {
         checkLogin(command[1].split(" ", 2));
         break;
       case "reg":
+        registration(command[1].split(" ", 2), dos);
         break;
       default:
         dos.writeBytes("Incorrect input. Try it again.\n");
@@ -60,7 +61,7 @@ public class MyThread extends Thread {
           break;
         }
       } else {
-        dos.writeBytes("Please log in.\n");
+        dos.writeBytes("Please log in or create account.\n");
         return;
       }
     }
@@ -68,7 +69,7 @@ public class MyThread extends Thread {
 
   synchronized private void checkLogin(String[] data) throws FileNotFoundException {
     FileInputStream file =
-      new FileInputStream("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd");
+      new FileInputStream("file_path/src/bd");
     Scanner sc = new Scanner(file);
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
@@ -78,6 +79,40 @@ public class MyThread extends Thread {
         return;
       }
     }
+  }
+
+  synchronized private void registration(String[] data, DataOutputStream dos) throws IOException {
+    if (isLogin) {
+      dos.writeBytes("You logged in.");
+      return;
+    }
+    if (userNameExist(data)) {
+      dos.writeBytes("This username exists. Try it again.\n");
+      return;
+    }
+    BufferedWriter writer = new BufferedWriter(new FileWriter
+      ("file_path/src/bd", true));
+    writer.append(data[0]);
+    writer.append("::");
+    writer.append(data[1]);
+    writer.append("\n");
+    writer.close();
+    this.isLogin = true;
+    this.userName = data[0];
+    dos.writeBytes("Your registration was successful.\n");
+  }
+
+  synchronized private boolean userNameExist(String[] data) throws FileNotFoundException {
+    FileInputStream file =
+      new FileInputStream("file_path/src/bd");
+    Scanner sc = new Scanner(file);
+    while (sc.hasNext()) {
+      String[] info = sc.nextLine().split("::", 2);
+      if (info[0].equals(data[0])) {
+        return true;
+      }
+    }
+    return false;
   }
 
 }
