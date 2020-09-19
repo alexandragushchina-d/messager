@@ -77,7 +77,7 @@ public class MyThread extends Thread {
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
       if (info[0].equals(name) && info[1].equals(password)) {
-        this.userName = data[0];
+        this.userName = name;
         this.isLogin = true;
         return;
       }
