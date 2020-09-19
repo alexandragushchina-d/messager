@@ -68,12 +68,15 @@ public class MyThread extends Thread {
   }
 
   synchronized private void checkLogin(String[] data) throws FileNotFoundException {
+    String name = data[0];
+    String password = data[1];
     FileInputStream file =
       new FileInputStream("file_path/src/bd");
     Scanner sc = new Scanner(file);
+
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
-      if (info[0].equals(data[0]) && info[1].equals(data[1])) {
+      if (info[0].equals(name) && info[1].equals(password)) {
         this.userName = data[0];
         this.isLogin = true;
         return;
@@ -82,6 +85,8 @@ public class MyThread extends Thread {
   }
 
   synchronized private void registration(String[] data, DataOutputStream dos) throws IOException {
+    String name = data[0];
+    String password = data[1];
     if (data.length <= 1) {
       dos.writeBytes("Input is invalid.\n");
       return;
@@ -90,20 +95,20 @@ public class MyThread extends Thread {
       dos.writeBytes("You logged in.\n");
       return;
     }
-    if (userNameExist(data)) {
+    if (userNameExist(data[0])) {
       dos.writeBytes("This username exists. Try it again.\n");
       return;
     }
-    if (checkPassword(data[1])) {
+    if (checkPassword(password)) {
       BufferedWriter writer = new BufferedWriter(new FileWriter
         ("file_path/src/bd", true));
-      writer.append(data[0]);
+      writer.append(name);
       writer.append("::");
-      writer.append(data[1]);
+      writer.append(password);
       writer.append("\n");
       writer.close();
       this.isLogin = true;
-      this.userName = data[0];
+      this.userName = name;
       dos.writeBytes("Your registration was successful.\n");
     } else {
       dos.writeBytes("Password must contain minimum 8 symbols inclusive a digital, a capital " +
@@ -111,13 +116,14 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private boolean userNameExist(String[] data) throws FileNotFoundException {
+  synchronized private boolean userNameExist(String name) throws FileNotFoundException {
     FileInputStream file =
       new FileInputStream("file_path/src/bd");
     Scanner sc = new Scanner(file);
+
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
-      if (info[0].equals(data[0])) {
+      if (info[0].equals(name)) {
         return true;
       }
     }
@@ -128,11 +134,13 @@ public class MyThread extends Thread {
     if (password.length() < 8) {
       return false;
     }
+
     char ch;
     boolean capitalFlag = false;
     boolean lowerCaseFlag = false;
     boolean numberFlag = false;
     boolean existColon = false;
+
     for (int i = 0; i < password.length(); i++) {
       ch = password.charAt(i);
       if (Character.isDigit(ch)) {
@@ -145,6 +153,7 @@ public class MyThread extends Thread {
         existColon = true;
       }
     }
+
     if (numberFlag && capitalFlag && lowerCaseFlag && !existColon) {
       return true;
     }
