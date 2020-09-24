@@ -23,9 +23,11 @@ public class MyThread extends Thread {
       DataOutputStream dos = new DataOutputStream(os);
       InputStream is = socket.getInputStream();
       DataInputStream dis = new DataInputStream(is);
+
       while (true) {
         processUserInput(dis, dos);
       }
+
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -34,18 +36,19 @@ public class MyThread extends Thread {
   private void processUserInput(DataInputStream dis, DataOutputStream dos) throws IOException {
     String inputLine = dis.readLine();
     String[] command = inputLine.split(" ", 2);
+
     switch (command[0]) {
       case "msg":
         sendMessage(command[1], dos);
         break;
       case "login":
-        checkLogin(command[1].split(" ", 2));
+        checkLogin(command[1].split(" ", 2), dos);
         break;
       case "reg":
         registration(command[1].split(" ", 2), dos);
         break;
       default:
-        dos.writeBytes("Incorrect input. Try it again.\n");
+        dos.writeBytes("Input is invalid. Try it again.\n");
         break;
     }
   }
@@ -67,7 +70,12 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private void checkLogin(String[] data) throws FileNotFoundException {
+  synchronized private void checkLogin(String[] data, DataOutputStream dos) throws IOException {
+    if (data.length <= 1) {
+      dos.writeBytes("Input is invalid. Try it again.\n");
+      return;
+    }
+
     String name = data[0];
     String password = data[1];
     FileInputStream file =
@@ -85,17 +93,19 @@ public class MyThread extends Thread {
   }
 
   synchronized private void registration(String[] data, DataOutputStream dos) throws IOException {
+    if (data.length <= 1) {
+      dos.writeBytes("Input is invalid. Try it again.\n");
+      return;
+    }
+
     String name = data[0];
     String password = data[1];
-    if (data.length <= 1) {
-      dos.writeBytes("Input is invalid.\n");
-      return;
-    }
+
     if (isLogin) {
-      dos.writeBytes("You logged in.\n");
+      dos.writeBytes("You have already logged in.\n");
       return;
     }
-    if (userNameExist(data[0])) {
+    if (userNameExist(name)) {
       dos.writeBytes("This username exists. Try it again.\n");
       return;
     }
@@ -109,10 +119,10 @@ public class MyThread extends Thread {
       writer.close();
       this.isLogin = true;
       this.userName = name;
-      dos.writeBytes("Your registration was successful.\n");
+      dos.writeBytes("Your registration is successful.\n");
     } else {
-      dos.writeBytes("Password must contain minimum 8 symbols inclusive a digital, a capital " +
-        "and a lower letters, but mustn't contain a colon symbol.\n");
+      dos.writeBytes("The password must consist of at least 8 characters that are a combination of letters" +
+        "in both uppercase and lowercase and a digit, but must not contain a colon.\n");
     }
   }
 
@@ -141,7 +151,7 @@ public class MyThread extends Thread {
     boolean numberFlag = false;
     boolean existColon = false;
 
-    for (int i = 0; i < password.length(); i++) {
+    for (int i = 0; i < password.length(); ++i) {
       ch = password.charAt(i);
       if (Character.isDigit(ch)) {
         numberFlag = true;
@@ -154,10 +164,7 @@ public class MyThread extends Thread {
       }
     }
 
-    if (numberFlag && capitalFlag && lowerCaseFlag && !existColon) {
-      return true;
-    }
-    return false;
+    return (numberFlag && capitalFlag && lowerCaseFlag && !existColon);
   }
 
 }
