@@ -23,9 +23,11 @@ public class MyThread extends Thread {
       DataOutputStream dos = new DataOutputStream(os);
       InputStream is = socket.getInputStream();
       DataInputStream dis = new DataInputStream(is);
+
       while (true) {
         processUserInput(dis, dos);
       }
+
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -34,18 +36,19 @@ public class MyThread extends Thread {
   private void processUserInput(DataInputStream dis, DataOutputStream dos) throws IOException {
     String inputLine = dis.readLine();
     String[] command = inputLine.split(" ", 2);
+
     switch (command[0]) {
       case "msg":
         sendMessage(command[1], dos);
         break;
       case "login":
-        checkLogin(command[1].split(" ", 2));
+        checkLogin(command[1].split(" ", 2), dos);
         break;
       case "reg":
         registration(command[1].split(" ", 2), dos);
         break;
       default:
-        dos.writeBytes("Incorrect input. Try it again.\n");
+        dos.writeBytes("Input is invalid. Try it again.\n");
         break;
     }
   }
@@ -67,14 +70,22 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private void checkLogin(String[] data) throws FileNotFoundException {
+  synchronized private void checkLogin(String[] data, DataOutputStream dos) throws IOException {
+    if (data.length <= 1) {
+      dos.writeBytes("Input is invalid. Try it again.\n");
+      return;
+    }
+
+    String name = data[0];
+    String password = data[1];
     FileInputStream file =
       new FileInputStream("file_path/src/bd");
     Scanner sc = new Scanner(file);
+
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
-      if (info[0].equals(data[0]) && info[1].equals(data[1])) {
-        this.userName = data[0];
+      if (info[0].equals(name) && info[1].equals(password)) {
+        this.userName = name;
         this.isLogin = true;
         return;
       }
@@ -82,37 +93,78 @@ public class MyThread extends Thread {
   }
 
   synchronized private void registration(String[] data, DataOutputStream dos) throws IOException {
-    if (isLogin) {
-      dos.writeBytes("You logged in.");
+    if (data.length <= 1) {
+      dos.writeBytes("Input is invalid. Try it again.\n");
       return;
     }
-    if (userNameExist(data)) {
+
+    String name = data[0];
+    String password = data[1];
+
+    if (isLogin) {
+      dos.writeBytes("You have already logged in.\n");
+      return;
+    }
+    if (userNameExist(name)) {
       dos.writeBytes("This username exists. Try it again.\n");
       return;
     }
-    BufferedWriter writer = new BufferedWriter(new FileWriter
-      ("file_path/src/bd", true));
-    writer.append(data[0]);
-    writer.append("::");
-    writer.append(data[1]);
-    writer.append("\n");
-    writer.close();
-    this.isLogin = true;
-    this.userName = data[0];
-    dos.writeBytes("Your registration was successful.\n");
+    if (checkPassword(password)) {
+      BufferedWriter writer = new BufferedWriter(new FileWriter
+        ("file_path/src/bd", true));
+      writer.append(name);
+      writer.append("::");
+      writer.append(password);
+      writer.append("\n");
+      writer.close();
+      this.isLogin = true;
+      this.userName = name;
+      dos.writeBytes("Your registration is successful.\n");
+    } else {
+      dos.writeBytes("The password must consist of at least 8 characters that are a combination of letters" +
+        "in both uppercase and lowercase and a digit, but must not contain a colon.\n");
+    }
   }
 
-  synchronized private boolean userNameExist(String[] data) throws FileNotFoundException {
+  synchronized private boolean userNameExist(String name) throws FileNotFoundException {
     FileInputStream file =
       new FileInputStream("file_path/src/bd");
     Scanner sc = new Scanner(file);
+
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
-      if (info[0].equals(data[0])) {
+      if (info[0].equals(name)) {
         return true;
       }
     }
     return false;
+  }
+
+  private boolean checkPassword(String password) {
+    if (password.length() < 8) {
+      return false;
+    }
+
+    char ch;
+    boolean capitalFlag = false;
+    boolean lowerCaseFlag = false;
+    boolean numberFlag = false;
+    boolean existColon = false;
+
+    for (int i = 0; i < password.length(); ++i) {
+      ch = password.charAt(i);
+      if (Character.isDigit(ch)) {
+        numberFlag = true;
+      } else if (Character.isUpperCase(ch)) {
+        capitalFlag = true;
+      } else if (Character.isLowerCase(ch)) {
+        lowerCaseFlag = true;
+      } else if (ch == ':') {
+        existColon = true;
+      }
+    }
+
+    return (numberFlag && capitalFlag && lowerCaseFlag && !existColon);
   }
 
 }
