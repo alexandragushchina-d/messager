@@ -6,11 +6,11 @@ import java.util.Vector;
 public class MyThread extends Thread {
 
   private Socket socket;
-  private Vector<Socket> users;
+  private MyVector<Socket> users;
   private String userName;
   private boolean isLogin;
 
-  public MyThread(Vector<Socket> users, Socket socket) {
+  public MyThread(MyVector<Socket> users, Socket socket) {
     this.users = users;
     this.socket = socket;
     this.isLogin = false;
@@ -79,7 +79,7 @@ public class MyThread extends Thread {
     String name = data[0];
     String password = data[1];
     FileInputStream file =
-      new FileInputStream("file_path/src/bd");
+      new FileInputStream("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd");
     Scanner sc = new Scanner(file);
 
     while (sc.hasNext()) {
@@ -111,7 +111,7 @@ public class MyThread extends Thread {
     }
     if (checkPassword(password)) {
       BufferedWriter writer = new BufferedWriter(new FileWriter
-        ("file_path/src/bd", true));
+        ("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd", true));
       writer.append(name);
       writer.append("::");
       writer.append(password);
@@ -128,7 +128,7 @@ public class MyThread extends Thread {
 
   synchronized private boolean userNameExist(String name) throws FileNotFoundException {
     FileInputStream file =
-      new FileInputStream("file_path/src/bd");
+      new FileInputStream("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd");
     Scanner sc = new Scanner(file);
 
     while (sc.hasNext()) {

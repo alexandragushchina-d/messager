@@ -1,14 +1,13 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Vector;
 
 public class Server {
 
   private int port;
   private String host;
   private ServerSocket serverSocket;
-  private Vector<Socket> users;
+  private MyVector<Socket> users;
 
   public Server() {
     this.host = "localhost";
@@ -18,7 +17,7 @@ public class Server {
   public Server(String host, int port) {
     this.host = host;
     this.port = port;
-    this.users = new Vector<>();
+    this.users = new MyVector<>();
   }
 
   public void runServer() throws IOException {
