@@ -10,6 +10,17 @@ public class MyVector<T> {
     this.users = new Object[capacity];
   }
 
+  public MyVector(int size, T initialValue) {
+    this.size = size;
+    if (size > capacity) {
+      this.capacity = size;
+    }
+    this.users = new Object[capacity];
+    for (int i = 0; i < size; ++i) {
+      users[i] = initialValue;
+    }
+  }
+
   public void add(T x) {
     if (users.length == size) {
       increaseVector();
@@ -59,7 +70,7 @@ public class MyVector<T> {
 
   public void removeLast() {
     --size;
-    if (size < capacity / 2) {
+    if (size < capacity / 3) {
       decreaseVector();
     }
   }
@@ -70,7 +81,7 @@ public class MyVector<T> {
       users[--index] = users[i];
     }
     --size;
-    if (size < capacity / 2) {
+    if (size < capacity / 3) {
       decreaseVector();
     }
   }
@@ -82,7 +93,7 @@ public class MyVector<T> {
     }
     if (index <= size) {
       --size;
-      if (size < capacity / 2) {
+      if (size < capacity / 3) {
         decreaseVector();
       }
     }
@@ -151,7 +162,7 @@ public class MyVector<T> {
     }
     this.users = newVector;
 
-    if (size < capacity / 2) {
+    if (size < capacity / 3) {
       decreaseVector();
     }
   }

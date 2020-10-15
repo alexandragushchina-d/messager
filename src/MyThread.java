@@ -79,7 +79,7 @@ public class MyThread extends Thread {
     String name = data[0];
     String password = data[1];
     FileInputStream file =
-      new FileInputStream("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd");
+      new FileInputStream(Config.FILE_PATH);
     Scanner sc = new Scanner(file);
 
     while (sc.hasNext()) {
@@ -111,7 +111,7 @@ public class MyThread extends Thread {
     }
     if (checkPassword(password)) {
       BufferedWriter writer = new BufferedWriter(new FileWriter
-        ("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd", true));
+        (Config.FILE_PATH, true));
       writer.append(name);
       writer.append("::");
       writer.append(password);
@@ -128,7 +128,7 @@ public class MyThread extends Thread {
 
   synchronized private boolean userNameExist(String name) throws FileNotFoundException {
     FileInputStream file =
-      new FileInputStream("/home/sasha/Desktop/work/TUM/intellij_projects/socket_2/src/bd");
+      new FileInputStream(Config.FILE_PATH);
     Scanner sc = new Scanner(file);
 
     while (sc.hasNext()) {
