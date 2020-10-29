@@ -1,13 +1,13 @@
 public class MyVector<T> {
 
-  private Object[] users;
+  private Object[] objects;
   private int size;
   private int capacity;
 
   public MyVector() {
     this.size = 0;
     this.capacity = 10;
-    this.users = new Object[capacity];
+    this.objects = new Object[capacity];
   }
 
   public MyVector(int size, T initialValue) {
@@ -15,33 +15,33 @@ public class MyVector<T> {
     if (size > capacity) {
       this.capacity = size;
     }
-    this.users = new Object[capacity];
+    this.objects = new Object[capacity];
     for (int i = 0; i < size; ++i) {
-      users[i] = initialValue;
+      this.add(initialValue);
     }
   }
 
   public void add(T x) {
-    if (users.length == size) {
+    if (objects.length == size) {
       increaseVector();
     }
-    users[size++] = x;
+    objects[size++] = x;
   }
 
   public void add(int index, T x) {
     size++;
-    if (users.length == size) {
+    if (objects.length == size) {
       increaseVector();
     }
     for (int i = size - 1; i > 0 && i > index; --i) {
       int previous = i;
-      users[i] = users[--previous];
+      objects[i] = objects[--previous];
     }
-    users[index] = x;
+    objects[index] = x;
   }
 
   public T get(int index) {
-    return (T) users[index];
+    return (T) objects[index];
   }
 
   public int capacity() {
@@ -56,16 +56,16 @@ public class MyVector<T> {
     if (index > size) {
       increaseVector();
     }
-    users[index] = x;
+    objects[index] = x;
   }
 
   public T firstElement() {
-    return (T) users[0];
+    return (T) objects[0];
   }
 
   public T lastElement() {
     int index = size;
-    return (T) users[--index];
+    return (T) objects[--index];
   }
 
   public void removeLast() {
@@ -78,7 +78,7 @@ public class MyVector<T> {
   public void removeFirst() {
     for (int i = 1; i < size; ++i) {
       int index = i;
-      users[--index] = users[i];
+      objects[--index] = objects[i];
     }
     --size;
     if (size < capacity / 3) {
@@ -89,7 +89,7 @@ public class MyVector<T> {
   public void remove(int index) {
     for (int i = index; i < size; i++) {
       int next = i;
-      users[i] = users[++next];
+      objects[i] = objects[++next];
     }
     if (index <= size) {
       --size;
@@ -101,7 +101,7 @@ public class MyVector<T> {
 
   public int indexOf(T x) {
     for (int i = 0; i < size; ++i) {
-      if (users[i].equals(x)) {
+      if (objects[i].equals(x)) {
         return i;
       }
     }
@@ -110,7 +110,7 @@ public class MyVector<T> {
 
   public int indexOf(int startIndex, T x) {
     for (int i = startIndex; i < size; ++i) {
-      if (users[i].equals(x)) {
+      if (objects[i].equals(x)) {
         return i;
       }
     }
@@ -119,7 +119,7 @@ public class MyVector<T> {
 
   public int lastIndexOf(Object o) {
     for (int i = size - 1; i >= 0; --i) {
-      if (users[i].equals(o)) {
+      if (objects[i].equals(o)) {
         return i;
       }
     }
@@ -128,7 +128,7 @@ public class MyVector<T> {
 
   public int lastIndexOf(Object o, int index) {
     for (int i = index; i >= 0; --i) {
-      if (users[i].equals(o)) {
+      if (objects[i].equals(o)) {
         return i;
       }
     }
@@ -137,7 +137,7 @@ public class MyVector<T> {
 
   public <T> T[] toArray(T[] a) {
     for (int i = 0; i < size; ++i) {
-      a[i] = (T) users[i];
+      a[i] = (T) objects[i];
     }
     return a;
   }
@@ -155,12 +155,12 @@ public class MyVector<T> {
     Object[] newVector = new Object[newCapacity];
     for (int i = 0; i < newCapacity; ++i) {
       if (i < size) {
-        newVector[i] = users[i];
+        newVector[i] = objects[i];
       } else {
         break;
       }
     }
-    this.users = newVector;
+    this.objects = newVector;
 
     if (size < capacity / 3) {
       decreaseVector();
@@ -172,7 +172,7 @@ public class MyVector<T> {
       return false;
     }
     for (int i = 0; i < size; ++i) {
-      if (!users[i].equals(v.get(i))) {
+      if (!objects[i].equals(v.get(i))) {
         return false;
       }
     }
@@ -182,18 +182,18 @@ public class MyVector<T> {
   private void increaseVector() {
     capacity *= 4;
     Object[] new_users = new Object[capacity];
-    for (int i = 0; i < users.length; ++i) {
-      new_users[i] = users[i];
+    for (int i = 0; i < objects.length; ++i) {
+      new_users[i] = objects[i];
     }
-    this.users = new_users;
+    this.objects = new_users;
   }
 
   private void decreaseVector() {
     capacity /= 2;
     Object[] new_users = new Object[capacity];
-    for (int i = 0; i < users.length && i < capacity; ++i) {
-      new_users[i] = users[i];
+    for (int i = 0; i < objects.length && i < capacity; ++i) {
+      new_users[i] = objects[i];
     }
-    this.users = new_users;
+    this.objects = new_users;
   }
 }

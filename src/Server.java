@@ -7,7 +7,8 @@ public class Server {
   private int port;
   private String host;
   private ServerSocket serverSocket;
-  private MyVector<Socket> users;
+  private MyVector<UserInfo> users;
+  private UserInfo user;
 
   public Server() {
     this.host = "localhost";
@@ -26,8 +27,9 @@ public class Server {
 
     while (true) {
       socket = serverSocket.accept();
-      users.add(socket);
-      new MyThread(users, socket).start();
+      user = new UserInfo(socket);
+      users.add(user);
+      new MyThread(users, user).start();
     }
   }
 

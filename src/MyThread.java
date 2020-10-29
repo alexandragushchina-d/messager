@@ -5,23 +5,20 @@ import java.util.Vector;
 
 public class MyThread extends Thread {
 
-  private Socket socket;
-  private MyVector<Socket> users;
-  private String userName;
-  private boolean isLogin;
+  private MyVector<UserInfo> users;
+  private UserInfo user;
 
-  public MyThread(MyVector<Socket> users, Socket socket) {
+  public MyThread(MyVector<UserInfo> users, UserInfo user) {
     this.users = users;
-    this.socket = socket;
-    this.isLogin = false;
+    this.user = user;
   }
 
   @Override
   public void run() {
     try {
-      OutputStream os = socket.getOutputStream();
+      OutputStream os = this.user.getSocket().getOutputStream();
       DataOutputStream dos = new DataOutputStream(os);
-      InputStream is = socket.getInputStream();
+      InputStream is = this.user.getSocket().getInputStream();
       DataInputStream dis = new DataInputStream(is);
 
       while (true) {
@@ -38,8 +35,14 @@ public class MyThread extends Thread {
     String[] command = inputLine.split(" ", 2);
 
     switch (command[0]) {
+      case "global":
+        sendAllMessage(command[1], dos);
+        break;
+      case "online":
+        isOnline(dos);
+        break;
       case "msg":
-        sendMessage(command[1], dos);
+        sendMessage(command[1].split(" ", 2), dos);
         break;
       case "login":
         checkLogin(command[1].split(" ", 2), dos);
@@ -53,11 +56,12 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private void sendMessage(String message, DataOutputStream dos) throws IOException {
+  synchronized private void sendAllMessage(String message, DataOutputStream dos) throws IOException {
     for (int i = 0; i < users.size(); ++i) {
-      if (isLogin) {
+      if (this.user.isLogin()) {
         try {
-          new DataOutputStream(users.get(i).getOutputStream()).writeBytes(userName + ": " + message + "\n");
+          new DataOutputStream(users.get(i).getSocket().getOutputStream())
+            .writeBytes(this.user.getUsername() + ": " + message + "\n");
         } catch (Exception e) {
           users.remove(i);
           --i;
@@ -66,6 +70,32 @@ public class MyThread extends Thread {
       } else {
         dos.writeBytes("Please log in or create account.\n");
         return;
+      }
+    }
+  }
+
+  synchronized private void sendMessage(String[] data, DataOutputStream dos) throws IOException {
+    if (data.length <= 1) {
+      dos.writeBytes("Input is invalid. Try \"msg userName message\".\n");
+      return;
+    }
+
+    String toUserName = data[0];
+    String message = data[1];
+
+    for (int i = 0; i < users.size(); ++i) {
+      if (users.get(i).getUsername().trim().equals(toUserName.trim()) && users.get(i).isLogin()) {
+        users.get(i).sendAlert(this.user.getUsername(), message);
+        return;
+      }
+    }
+  }
+
+  synchronized private void isOnline(DataOutputStream dos) throws IOException {
+    for (int i = 0; i < users.size(); ++i) {
+      if (users.get(i).isLogin()
+        && !this.user.getUsername().equals(users.get(i).getUsername())) {
+        dos.writeBytes(users.get(i).getUsername() + "\n");
       }
     }
   }
@@ -85,8 +115,8 @@ public class MyThread extends Thread {
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
       if (info[0].equals(name) && info[1].equals(password)) {
-        this.userName = name;
-        this.isLogin = true;
+        this.user.setUsername(name.trim());
+        this.user.setLogin(true);
         return;
       }
     }
@@ -101,7 +131,7 @@ public class MyThread extends Thread {
     String name = data[0];
     String password = data[1];
 
-    if (isLogin) {
+    if (this.user.isLogin()) {
       dos.writeBytes("You have already logged in.\n");
       return;
     }
@@ -117,8 +147,8 @@ public class MyThread extends Thread {
       writer.append(password);
       writer.append("\n");
       writer.close();
-      this.isLogin = true;
-      this.userName = name;
+      this.user.setUsername(name.trim());
+      this.user.setLogin(true);
       dos.writeBytes("Your registration is successful.\n");
     } else {
       dos.writeBytes("The password must consist of at least 8 characters that are a combination of letters" +
@@ -144,13 +174,11 @@ public class MyThread extends Thread {
     if (password.length() < 8) {
       return false;
     }
-
     char ch;
     boolean capitalFlag = false;
     boolean lowerCaseFlag = false;
     boolean numberFlag = false;
     boolean existColon = false;
-
     for (int i = 0; i < password.length(); ++i) {
       ch = password.charAt(i);
       if (Character.isDigit(ch)) {
@@ -163,8 +191,15 @@ public class MyThread extends Thread {
         existColon = true;
       }
     }
-
     return (numberFlag && capitalFlag && lowerCaseFlag && !existColon);
+  }
+
+  // only for testing
+  private void logging(String message) {
+    System.out.println(message);
+    for (int i = 0; i < users.size(); ++i) {
+      System.out.println(users.get(i).getUsername());
+    }
   }
 
 }
