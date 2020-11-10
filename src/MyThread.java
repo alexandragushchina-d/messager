@@ -36,7 +36,7 @@ public class MyThread extends Thread {
 
     switch (command[0]) {
       case "global":
-        sendAllMessage(command[1], dos);
+        sendAllMessage(command[1]);
         break;
       case "online":
         isOnline(dos);
@@ -56,20 +56,14 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private void sendAllMessage(String message, DataOutputStream dos) throws IOException {
+  synchronized private void sendAllMessage(String message) {
     for (int i = 0; i < users.size(); ++i) {
-      if (this.user.isLogin()) {
-        try {
-          new DataOutputStream(users.get(i).getSocket().getOutputStream())
-            .writeBytes(this.user.getUsername() + ": " + message + "\n");
-        } catch (Exception e) {
-          users.remove(i);
-          --i;
-          break;
-        }
-      } else {
-        dos.writeBytes("Please log in or create account.\n");
-        return;
+      try {
+        users.get(i).sendAlert(this.user.getUsername(), message);
+      } catch (Exception e) {
+        users.remove(i);
+        --i;
+        break;
       }
     }
   }
@@ -196,9 +190,11 @@ public class MyThread extends Thread {
 
   // only for testing
   private void logging(String message) {
-    System.out.println(message);
-    for (int i = 0; i < users.size(); ++i) {
-      System.out.println(users.get(i).getUsername());
+    if (Config.DEBUG) {
+      System.out.println(message);
+      for (int i = 0; i < users.size(); ++i) {
+        System.out.println(users.get(i).getUsername());
+      }
     }
   }
 

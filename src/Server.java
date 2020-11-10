@@ -11,7 +11,7 @@ public class Server {
   private UserInfo user;
 
   public Server() {
-    this.host = "localhost";
+    this.host = Config.HOST;
     this.port = 8080;
   }
 
