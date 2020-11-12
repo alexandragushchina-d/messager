@@ -1,24 +1,24 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Vector;
 
 public class Server {
 
   private int port;
   private String host;
   private ServerSocket serverSocket;
-  private Vector<Socket> users;
+  private MyVector<UserInfo> users;
+  private UserInfo user;
 
   public Server() {
-    this.host = "localhost";
+    this.host = Config.HOST;
     this.port = 8080;
   }
 
   public Server(String host, int port) {
     this.host = host;
     this.port = port;
-    this.users = new Vector<>();
+    this.users = new MyVector<>();
   }
 
   public void runServer() throws IOException {
@@ -27,8 +27,9 @@ public class Server {
 
     while (true) {
       socket = serverSocket.accept();
-      users.add(socket);
-      new MyThread(users, socket).start();
+      user = new UserInfo(socket);
+      users.add(user);
+      new MyThread(users, user).start();
     }
   }
 

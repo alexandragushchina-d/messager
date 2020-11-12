@@ -5,23 +5,20 @@ import java.util.Vector;
 
 public class MyThread extends Thread {
 
-  private Socket socket;
-  private Vector<Socket> users;
-  private String userName;
-  private boolean isLogin;
+  private MyVector<UserInfo> users;
+  private UserInfo user;
 
-  public MyThread(Vector<Socket> users, Socket socket) {
+  public MyThread(MyVector<UserInfo> users, UserInfo user) {
     this.users = users;
-    this.socket = socket;
-    this.isLogin = false;
+    this.user = user;
   }
 
   @Override
   public void run() {
     try {
-      OutputStream os = socket.getOutputStream();
+      OutputStream os = this.user.getSocket().getOutputStream();
       DataOutputStream dos = new DataOutputStream(os);
-      InputStream is = socket.getInputStream();
+      InputStream is = this.user.getSocket().getInputStream();
       DataInputStream dis = new DataInputStream(is);
 
       while (true) {
@@ -38,8 +35,14 @@ public class MyThread extends Thread {
     String[] command = inputLine.split(" ", 2);
 
     switch (command[0]) {
+      case "global":
+        sendAllMessage(command[1]);
+        break;
+      case "online":
+        isOnline(dos);
+        break;
       case "msg":
-        sendMessage(command[1], dos);
+        sendMessage(command[1].split(" ", 2), dos);
         break;
       case "login":
         checkLogin(command[1].split(" ", 2), dos);
@@ -53,19 +56,40 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private void sendMessage(String message, DataOutputStream dos) throws IOException {
+  synchronized private void sendAllMessage(String message) {
     for (int i = 0; i < users.size(); ++i) {
-      if (isLogin) {
-        try {
-          new DataOutputStream(users.get(i).getOutputStream()).writeBytes(userName + ": " + message + "\n");
-        } catch (Exception e) {
-          users.remove(i);
-          --i;
-          break;
-        }
-      } else {
-        dos.writeBytes("Please log in or create account.\n");
+      try {
+        users.get(i).sendAlert(this.user.getUsername(), message);
+      } catch (Exception e) {
+        users.remove(i);
+        --i;
+        break;
+      }
+    }
+  }
+
+  synchronized private void sendMessage(String[] data, DataOutputStream dos) throws IOException {
+    if (data.length <= 1) {
+      dos.writeBytes("Input is invalid. Try \"msg userName message\".\n");
+      return;
+    }
+
+    String toUserName = data[0];
+    String message = data[1];
+
+    for (int i = 0; i < users.size(); ++i) {
+      if (users.get(i).getUsername().trim().equals(toUserName.trim()) && users.get(i).isLogin()) {
+        users.get(i).sendAlert(this.user.getUsername(), message);
         return;
+      }
+    }
+  }
+
+  synchronized private void isOnline(DataOutputStream dos) throws IOException {
+    for (int i = 0; i < users.size(); ++i) {
+      if (users.get(i).isLogin()
+        && !this.user.getUsername().equals(users.get(i).getUsername())) {
+        dos.writeBytes(users.get(i).getUsername() + "\n");
       }
     }
   }
@@ -79,14 +103,14 @@ public class MyThread extends Thread {
     String name = data[0];
     String password = data[1];
     FileInputStream file =
-      new FileInputStream("file_path/src/bd");
+      new FileInputStream(Config.FILE_PATH);
     Scanner sc = new Scanner(file);
 
     while (sc.hasNext()) {
       String[] info = sc.nextLine().split("::", 2);
       if (info[0].equals(name) && info[1].equals(password)) {
-        this.userName = name;
-        this.isLogin = true;
+        this.user.setUsername(name.trim());
+        this.user.setLogin(true);
         return;
       }
     }
@@ -101,7 +125,7 @@ public class MyThread extends Thread {
     String name = data[0];
     String password = data[1];
 
-    if (isLogin) {
+    if (this.user.isLogin()) {
       dos.writeBytes("You have already logged in.\n");
       return;
     }
@@ -111,14 +135,14 @@ public class MyThread extends Thread {
     }
     if (checkPassword(password)) {
       BufferedWriter writer = new BufferedWriter(new FileWriter
-        ("file_path/src/bd", true));
+        (Config.FILE_PATH, true));
       writer.append(name);
       writer.append("::");
       writer.append(password);
       writer.append("\n");
       writer.close();
-      this.isLogin = true;
-      this.userName = name;
+      this.user.setUsername(name.trim());
+      this.user.setLogin(true);
       dos.writeBytes("Your registration is successful.\n");
     } else {
       dos.writeBytes("The password must consist of at least 8 characters that are a combination of letters" +
@@ -128,7 +152,7 @@ public class MyThread extends Thread {
 
   synchronized private boolean userNameExist(String name) throws FileNotFoundException {
     FileInputStream file =
-      new FileInputStream("file_path/src/bd");
+      new FileInputStream(Config.FILE_PATH);
     Scanner sc = new Scanner(file);
 
     while (sc.hasNext()) {
@@ -144,13 +168,11 @@ public class MyThread extends Thread {
     if (password.length() < 8) {
       return false;
     }
-
     char ch;
     boolean capitalFlag = false;
     boolean lowerCaseFlag = false;
     boolean numberFlag = false;
     boolean existColon = false;
-
     for (int i = 0; i < password.length(); ++i) {
       ch = password.charAt(i);
       if (Character.isDigit(ch)) {
@@ -163,8 +185,17 @@ public class MyThread extends Thread {
         existColon = true;
       }
     }
-
     return (numberFlag && capitalFlag && lowerCaseFlag && !existColon);
+  }
+
+  // only for testing
+  private void logging(String message) {
+    if (Config.DEBUG) {
+      System.out.println(message);
+      for (int i = 0; i < users.size(); ++i) {
+        System.out.println(users.get(i).getUsername());
+      }
+    }
   }
 
 }
