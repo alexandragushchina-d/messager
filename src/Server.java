@@ -12,7 +12,7 @@ public class Server {
 
   public Server() {
     this.host = Config.HOST;
-    this.port = 8080;
+    this.port = Config.PORT;
   }
 
   public Server(String host, int port) {
