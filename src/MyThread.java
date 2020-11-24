@@ -1,16 +1,18 @@
 import java.io.*;
-import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
-import java.util.Vector;
 
 public class MyThread extends Thread {
 
   private MyVector<UserInfo> users;
   private UserInfo user;
+  private Logger logging;
 
   public MyThread(MyVector<UserInfo> users, UserInfo user) {
     this.users = users;
     this.user = user;
+    this.logging = new Logger(new File(Config.LOG_PATH_FILE), new File(Config.LOG_PATH_FILE_ERROR));
   }
 
   @Override
@@ -26,6 +28,11 @@ public class MyThread extends Thread {
       }
 
     } catch (Exception e) {
+      try {
+        logging.logError(logErrorStringBuilder(e.getMessage(), "", "run"));
+      } catch (IOException ioException) {
+        ioException.printStackTrace();
+      }
       e.printStackTrace();
     }
   }
@@ -56,11 +63,13 @@ public class MyThread extends Thread {
     }
   }
 
-  synchronized private void sendAllMessage(String message) {
+  synchronized private void sendAllMessage(String message) throws IOException {
     for (int i = 0; i < users.size(); ++i) {
       try {
         users.get(i).sendAlert(this.user.getUsername(), message);
+        logging.logEvent(logEventStringBuilder(message, "global"));
       } catch (Exception e) {
+        logging.logError(logErrorStringBuilder(e.getMessage(), "global", "sendAllMessage"));
         users.remove(i);
         --i;
         break;
@@ -80,6 +89,7 @@ public class MyThread extends Thread {
     for (int i = 0; i < users.size(); ++i) {
       if (users.get(i).getUsername().trim().equals(toUserName.trim()) && users.get(i).isLogin()) {
         users.get(i).sendAlert(this.user.getUsername(), message);
+        logging.logEvent(logEventStringBuilder(message, "msg"));
         return;
       }
     }
@@ -90,6 +100,7 @@ public class MyThread extends Thread {
       if (users.get(i).isLogin()
         && !this.user.getUsername().equals(users.get(i).getUsername())) {
         dos.writeBytes(users.get(i).getUsername() + "\n");
+        logging.logEvent(logEventStringBuilder("", "online"));
       }
     }
   }
@@ -111,6 +122,7 @@ public class MyThread extends Thread {
       if (info[0].equals(name) && info[1].equals(password)) {
         this.user.setUsername(name.trim());
         this.user.setLogin(true);
+        logging.logEvent(logEventStringBuilder(name + password, "login"));
         return;
       }
     }
@@ -126,10 +138,12 @@ public class MyThread extends Thread {
     String password = data[1];
 
     if (this.user.isLogin()) {
+      logging.logEvent(logEventStringBuilder(name + password, "reg"));
       dos.writeBytes("You have already logged in.\n");
       return;
     }
     if (userNameExist(name)) {
+      logging.logEvent(logEventStringBuilder(name + password, "reg"));
       dos.writeBytes("This username exists. Try it again.\n");
       return;
     }
@@ -143,6 +157,7 @@ public class MyThread extends Thread {
       writer.close();
       this.user.setUsername(name.trim());
       this.user.setLogin(true);
+      logging.logEvent(logEventStringBuilder(name + password, "reg"));
       dos.writeBytes("Your registration is successful.\n");
     } else {
       dos.writeBytes("The password must consist of at least 8 characters that are a combination of letters" +
@@ -188,14 +203,17 @@ public class MyThread extends Thread {
     return (numberFlag && capitalFlag && lowerCaseFlag && !existColon);
   }
 
-  // only for testing
-  private void logging(String message) {
-    if (Config.DEBUG) {
-      System.out.println(message);
-      for (int i = 0; i < users.size(); ++i) {
-        System.out.println(users.get(i).getUsername());
-      }
-    }
+  private String logEventStringBuilder(String message, String eventName) {
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    LocalDateTime now = LocalDateTime.now();
+    return (dtf.format(now) + ";" + eventName + ";" + this.user.getUsername() + ";" + message);
+  }
+
+  private String logErrorStringBuilder(String message, String eventName, String methodName) {
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    LocalDateTime now = LocalDateTime.now();
+    return (dtf.format(now) + ";" + eventName + ";" + this.user.getUsername() + ";"
+      + message + ";" + methodName);
   }
 
 }
