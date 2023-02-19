@@ -29,19 +29,19 @@ A list of technologies used for the java-based project:
 ### Ubuntu <a name="installation-ubuntu"></a>
 
 - Keep your environment up to date
-```json
+```
 $ sudo apt-get update
 $ sudo apt-get upgrade
 ```
 
 - Install OpenJDK JRE
-```json
+```
 $ sudo apt install default-jre
 $ java -version
 ```
 
 - Install telnet
-```json
+```
 $ sudo apt install telnetd telnet
 ```
 ### Windows <a name="installation-windows"></a>
@@ -50,15 +50,15 @@ $ sudo apt install telnetd telnet
 
 ***
 ## Start the program <a name="start-program"></a>
-```json
+```
 $ telnet localhost 8080
 ```
 The next steps:
 
-```json
+```
 $ reg user password
 ```
 
-```json
+```
 $ login user password
 ```
